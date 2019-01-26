@@ -15,6 +15,8 @@
 #   
 ######################################################
 
+from random import shuffle # used to randomize the order in which moves are made
+
 mStartState =   [
                     [-1,-1,-1,-1,1,-1,-1,-1,-1]
                     , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
@@ -28,6 +30,25 @@ mStartState =   [
                 ]
 #nodes = len(mStartState)
 #print(f"nodes={nodes}")
+
+# Check if the current game state is already solved
+def CopyState(mCurrentState):
+    # initialized to all -1's
+    mStateCopy =   [
+                        [-1,-1,-1,-1,1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                    ]
+    for x in range(0, 9):
+        for y in range(0, 9):
+            mStateCopy[x][y] = mCurrentState[x][y]
+    return mStateCopy
 
 # Print the current game state as a pyramid:
 #     1
@@ -64,10 +85,25 @@ def IsSolved(mCurrentState):
     else:
         print(f"Warning: sum={sum} should never happen.")
 
+# Check if the current game state is already solved
+def GetScore(mCurrentState):
+    sum = 0
+    for x in range(0, 9):
+        for y in range(0, 9):
+            if mCurrentState[x][y] == 0:
+                sum = sum + 1
+    if sum == 13:
+        print(f"Warning: Score{sum} should never happen because it is the solution.")
+    else:
+        return sum
+
 # Try to find a zero node that can be shifted according to the specified changeState
 #   Note: Calling function must determine if game state was changed.
-def AttemptStateChange(mCurrentState, changeType):
+def AttemptStateChange(mActualState, changeType):
+    # use a local variable to prevent changing the actual game state
+    mCurrentState = CopyState(mActualState)
     changedState = False
+    pegMoveFromTo = "N/A"
     xDif = 0
     yDif = 0
     if changeType == "Diagonal_Down_Left":
@@ -98,48 +134,131 @@ def AttemptStateChange(mCurrentState, changeType):
                     mCurrentState[x][y] = 1
                     mCurrentState[x+xDif][y+yDif] = 0
                     mCurrentState[x+xDif+xDif][y+yDif+yDif] = 0
+                    pegMoveFromTo = str(x+xDif+xDif) + ":" + str(y+yDif+yDif) + "-" + str(x) + ":" + str(y)
                     changedState = True
-                    return changedState, mCurrentState
+                    return changedState, pegMoveFromTo, mCurrentState
     # No change to game state
-    return changedState, mCurrentState
+    return changedState, pegMoveFromTo, mCurrentState
 
-PrintState(mStartState)
+# Adapted from:
+# Python program to demonstrate insert operation in binary search tree  
+# https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/
+  
+# A utility class that represents an individual node in six-leaf tree
+class GameSpaceNode: 
+    def __init__(self, sMove, sMoveType, nSore, mState):
+        self.one = None
+        self.two = None
+        self.three = None
+        self.four = None
+        self.five = None
+        self.six = None
+        self.move = sMove
+        self.moveType = sMoveType
+        self.score = nSore
+        self.state = mState
 
-stateChanged, mCurrentState = AttemptStateChange(mStartState, "Diagonal_Down_Left")
+    def __repr__(self):
+        return {
+            'move':self.move
+            , 'moveType':self.moveType
+            , 'score':self.score
+        }
+    
+    def __str__(self):
+        return "GameSpaceNode(move=" + self.move + ", moveType=" + self.moveType + ", score=" + str(self.score) + ")"
 
-print(f"The game state has changed: {stateChanged}")
+# A utility function to insert a new node with the given state into the Game Space Tree
+def InsertNodeIntoGameSpaceTree(root, node):
+    if root is None:
+        root = node
+    else:
+        # add to current root level leaves
+        if root.score == node.score:
+            if root.one is None:
+                root.one = node
+            elif root.two is None:
+                root.two = node
+            elif root.three is None:
+                root.three = node
+            elif root.four is None:
+                root.four = node
+            elif root.five is None:
+                root.five = node
+            elif root.six is None:
+                root.six = node
+            else:
+                print(f"Warning 1: this should never happen")
+        # insert another level to the tree and populate leaves with recursive call
+        elif root.score < node.score:
+            if root.one is not None:
+                InsertNodeIntoGameSpaceTree(root.one, node)
+            elif root.two is not None:
+                InsertNodeIntoGameSpaceTree(root.two, node)
+            elif root.three is not None:
+                InsertNodeIntoGameSpaceTree(root.three, node)
+            elif root.four is not None:
+                InsertNodeIntoGameSpaceTree(root.four, node)
+            elif root.five is not None:
+                InsertNodeIntoGameSpaceTree(root.five, node)
+            elif root.six is not None:
+                InsertNodeIntoGameSpaceTree(root.six, node)
+            else:
+                print(f"Warning 2: this should never happen")
+        else:
+            print(f"Warning 3: this should never happen")
 
-PrintState(mCurrentState)
+# A utility function to do inorder tree traversal
+def inorder(root):
+    if root:
+        inorder(root.one)
+        inorder(root.two)
+        inorder(root.three)
+        inorder(root.four)
+        inorder(root.five)
+        inorder(root.six)
+        print(root)
+        PrintState(root.state)
 
-stateChanged, mCurrentState = AttemptStateChange(mCurrentState, "Right")
+def PopulateOneLevelOfGameSpaceTree(currentRootNode, mCurrentState):
 
-print(f"The game state has changed: {stateChanged}")
+    dictMoveTypes = {
+          0 : "Diagonal_Down_Left"
+        , 1 : "Diagonal_Down_Right"
+        , 2 : "Diagonal_Up_Left"
+        , 3 : "Diagonal_Up_Right"
+        , 4 : "Left"
+        , 5 : "Right"
+    }
 
-PrintState(mCurrentState)
+    # randomize the oder in which moves are attempted
+    randomMoves = [0,1,2,3,4,5]
+    shuffle(randomMoves)
+    for i in range(0, 6):
+        stateChanged, movedFromTo, mNextState = AttemptStateChange(mCurrentState, dictMoveTypes[randomMoves[i]])
+        if stateChanged:
+            score = GetScore(mNextState)
+            nextMoveNode = GameSpaceNode(movedFromTo, dictMoveTypes[randomMoves[i]], score, mNextState)
+            InsertNodeIntoGameSpaceTree(currentRootNode, nextMoveNode)
+        else:
+            print(f"Unable to move {randomMoves[i]} = {dictMoveTypes[randomMoves[i]]}")
 
-stateChanged, mCurrentState = AttemptStateChange(mCurrentState, "Diagonal_Up_Right")
 
-print(f"The game state has changed: {stateChanged}")
+##### Move 0 = Root
+# Insert root node into Game Space Tree
+# Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
+rootNode = GameSpaceNode("Initial", "Static", 1, mStartState)
 
-PrintState(mCurrentState)
+##### Move 1 = Singular Left Leaf
+# Insert first and only left node into Game Space Tree
+# Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
+stateChanged, movedFromTo, mCurrentState = AttemptStateChange(mStartState, "Diagonal_Down_Left")
+firstMoveNode = GameSpaceNode(movedFromTo, "Diagonal_Down_Left", 2, mCurrentState)
+InsertNodeIntoGameSpaceTree(rootNode.one, firstMoveNode)
 
-stateChanged, mCurrentState = AttemptStateChange(mCurrentState, "Diagonal_Up_Left")
+inorder(rootNode)
 
-print(f"The game state has changed: {stateChanged}")
-
-PrintState(mCurrentState)
-
-stateChanged, mCurrentState = AttemptStateChange(mCurrentState, "Left")
-
-print(f"The game state has changed: {stateChanged}")
-
-PrintState(mCurrentState)
-
-stateChanged, mCurrentState = AttemptStateChange(mCurrentState, "Right")
-
-print(f"The game state has changed: {stateChanged}")
-
-PrintState(mCurrentState)
+print(f"Current Game Score: {GetScore(mCurrentState)}")
 
 print(f"The problem solved? {IsSolved(mCurrentState)}")
 
