@@ -17,20 +17,6 @@
 
 from random import shuffle # used to randomize the order in which moves are made
 
-mStartState =   [
-                    [-1,-1,-1,-1,1,-1,-1,-1,-1]
-                    , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
-                    , [-1,-1,-1,1,-1,1,-1,-1,-1]
-                    , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
-                    , [-1,-1,1,-1,0,-1,1,-1,-1]
-                    , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
-                    , [-1,1,-1,1,-1,1,-1,1,-1]
-                    , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
-                    , [1,-1,1,-1,1,-1,1,-1,1]
-                ]
-#nodes = len(mStartState)
-#print(f"nodes={nodes}")
-
 # Check if the current game state is already solved
 def CopyState(mCurrentState):
     # initialized to all -1's
@@ -92,8 +78,8 @@ def GetScore(mCurrentState):
         for y in range(0, 9):
             if mCurrentState[x][y] == 0:
                 sum = sum + 1
-    if sum == 13:
-        print(f"Warning: Score{sum} should never happen because it is the solution.")
+    if sum == 15:
+        print(f"Warning: Score{sum} should never happen because 14 is the solution.")
     else:
         return sum
 
@@ -125,12 +111,12 @@ def AttemptStateChange(mActualState, changeType):
     else:
         print(f"Warning: changeType({changeType}) should never happen")
   
-    print(f"Attempt {changeType} state change")
+#    print(f"Attempt {changeType} state change")
     for x in range(0, 9):
         for y in range(0, 9):
             if mCurrentState[x][y] == 0:
                 if ((x + xDif + xDif) < 9) and ((y + yDif + yDif) < 9) and mCurrentState[x+xDif][y+yDif] == 1 and mCurrentState[x+xDif+xDif][y+yDif+yDif] == 1:
-                    print(f"x{x},y{y} and {mCurrentState[x+xDif][y+yDif]} and {mCurrentState[x+xDif+xDif][y+yDif+yDif]}")
+#                    print(f"x{x},y{y} and {mCurrentState[x+xDif][y+yDif]} and {mCurrentState[x+xDif+xDif][y+yDif+yDif]}")
                     mCurrentState[x][y] = 1
                     mCurrentState[x+xDif][y+yDif] = 0
                     mCurrentState[x+xDif+xDif][y+yDif+yDif] = 0
@@ -140,19 +126,9 @@ def AttemptStateChange(mActualState, changeType):
     # No change to game state
     return changedState, pegMoveFromTo, mCurrentState
 
-# Adapted from:
-# Python program to demonstrate insert operation in binary search tree  
-# https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/
-  
-# A utility class that represents an individual node in six-leaf tree
+# an individual node representing a specific game state
 class GameSpaceNode: 
     def __init__(self, sMove, sMoveType, nSore, mState):
-        self.one = None
-        self.two = None
-        self.three = None
-        self.four = None
-        self.five = None
-        self.six = None
         self.move = sMove
         self.moveType = sMoveType
         self.score = nSore
@@ -168,59 +144,33 @@ class GameSpaceNode:
     def __str__(self):
         return "GameSpaceNode(move=" + self.move + ", moveType=" + self.moveType + ", score=" + str(self.score) + ")"
 
-# A utility function to insert a new node with the given state into the Game Space Tree
-def InsertNodeIntoGameSpaceTree(root, node):
-    if root is None:
-        root = node
-    else:
-        # add to current root level leaves
-        if root.score == node.score:
-            if root.one is None:
-                root.one = node
-            elif root.two is None:
-                root.two = node
-            elif root.three is None:
-                root.three = node
-            elif root.four is None:
-                root.four = node
-            elif root.five is None:
-                root.five = node
-            elif root.six is None:
-                root.six = node
-            else:
-                print(f"Warning 1: this should never happen")
-        # insert another level to the tree and populate leaves with recursive call
-        elif root.score < node.score:
-            if root.one is not None:
-                InsertNodeIntoGameSpaceTree(root.one, node)
-            elif root.two is not None:
-                InsertNodeIntoGameSpaceTree(root.two, node)
-            elif root.three is not None:
-                InsertNodeIntoGameSpaceTree(root.three, node)
-            elif root.four is not None:
-                InsertNodeIntoGameSpaceTree(root.four, node)
-            elif root.five is not None:
-                InsertNodeIntoGameSpaceTree(root.five, node)
-            elif root.six is not None:
-                InsertNodeIntoGameSpaceTree(root.six, node)
-            else:
-                print(f"Warning 2: this should never happen")
-        else:
-            print(f"Warning 3: this should never happen")
+def PopulateGameSpaceTree(GameSpaceTree):
+    mStartState =   [
+                        [-1,-1,-1,-1,1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,1,-1,1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,1,-1,0,-1,1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,1,-1,1,-1,1,-1,1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [1,-1,1,-1,1,-1,1,-1,1]
+                    ]
+    #nodes = len(mStartState)
+    #print(f"nodes={nodes}")
 
-# A utility function to do inorder tree traversal
-def inorder(root):
-    if root:
-        inorder(root.one)
-        inorder(root.two)
-        inorder(root.three)
-        inorder(root.four)
-        inorder(root.five)
-        inorder(root.six)
-        print(root)
-        PrintState(root.state)
+    ##### Move 0 = Root
+    # Insert root node into Game Space Tree
+    # Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
+    GameSpaceTree.append([]) # add an empty row 0
+    GameSpaceTree[0].append(GameSpaceNode("Initial", "Static", 1, mStartState))
 
-def PopulateOneLevelOfGameSpaceTree(currentRootNode, mCurrentState):
+    ##### Move 1 = Singular Left Leaf
+    # Insert first and only left node into Game Space Tree
+    # Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
+    stateChanged, movedFromTo, mNextState = AttemptStateChange(mStartState, "Diagonal_Down_Left")
+    GameSpaceTree.append([]) # add an empty row 1
+    GameSpaceTree[1].append(GameSpaceNode(movedFromTo, "Diagonal_Down_Left", 2, mNextState))
 
     dictMoveTypes = {
           0 : "Diagonal_Down_Left"
@@ -231,35 +181,50 @@ def PopulateOneLevelOfGameSpaceTree(currentRootNode, mCurrentState):
         , 5 : "Right"
     }
 
-    # randomize the oder in which moves are attempted
-    randomMoves = [0,1,2,3,4,5]
-    shuffle(randomMoves)
-    for i in range(0, 6):
-        stateChanged, movedFromTo, mNextState = AttemptStateChange(mCurrentState, dictMoveTypes[randomMoves[i]])
-        if stateChanged:
-            score = GetScore(mNextState)
-            nextMoveNode = GameSpaceNode(movedFromTo, dictMoveTypes[randomMoves[i]], score, mNextState)
-            InsertNodeIntoGameSpaceTree(currentRootNode, nextMoveNode)
-        else:
-            print(f"Unable to move {randomMoves[i]} = {dictMoveTypes[randomMoves[i]]}")
+    SolutionFound = False
+    iterations = 0
+    for row in range(2, 15):
+        GameSpaceTree.append([]) # add an empty row 0
+        for col in range(0, len(GameSpaceTree[row-1])):
+            mCurrentState = GameSpaceTree[row-1][col].state
+#            print(GameSpaceTree[row-1][col])
+#            PrintState(mCurrentState)
+            # randomize the oder in which moves are attempted
+            randomMoves = [0,1,2,3,4,5]
+            shuffle(randomMoves)
+            for i in range(0, 6):
+                stateChanged, movedFromTo, mNextState = AttemptStateChange(mCurrentState, dictMoveTypes[randomMoves[i]])
+                if stateChanged:
+                    iterations = iterations + 1
+                    score = GetScore(mNextState)
+                    GameSpaceTree[score-1].append(GameSpaceNode(movedFromTo, dictMoveTypes[randomMoves[i]], score, mNextState))
+                    if IsSolved(mNextState):
+                        print("Solved:")
+                        PrintState(mNextState)
+                        SolutionFound = True
+                        return SolutionFound, iterations
+    return SolutionFound, iterations
+#               else:
+#                   print(f"Unable to move {randomMoves[i]} = {dictMoveTypes[randomMoves[i]]}")
 
+# 2D matrix where rows are of equal game scores and columns are increasing game scores
+GameSpaceTree = []
 
-##### Move 0 = Root
-# Insert root node into Game Space Tree
-# Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
-rootNode = GameSpaceNode("Initial", "Static", 1, mStartState)
+SolutionWasFound, NumberOfIterations = PopulateGameSpaceTree(GameSpaceTree)
+print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations.")
 
-##### Move 1 = Singular Left Leaf
-# Insert first and only left node into Game Space Tree
-# Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
-stateChanged, movedFromTo, mCurrentState = AttemptStateChange(mStartState, "Diagonal_Down_Left")
-firstMoveNode = GameSpaceNode(movedFromTo, "Diagonal_Down_Left", 2, mCurrentState)
-InsertNodeIntoGameSpaceTree(rootNode.one, firstMoveNode)
+#PopulateOneLevelOfGameSpaceTree(GameSpaceTree, mCurrentState)
 
-inorder(rootNode)
+def PrintGameSpaceTree(GameSpaceTree):
+    rows = len(GameSpaceTree)
+    for r in range(0, rows):
+        for c in range(0, len(GameSpaceTree[r])):
+            print(f"[{r}][{c}] = {GameSpaceTree[r][c]}")
 
-print(f"Current Game Score: {GetScore(mCurrentState)}")
+#PrintGameSpaceTree(GameSpaceTree)
 
-print(f"The problem solved? {IsSolved(mCurrentState)}")
+#print(f"Current Game Score: {GetScore(mCurrentState)}")
+
+#print(f"The problem solved? {IsSolved(mCurrentState)}")
 
 
