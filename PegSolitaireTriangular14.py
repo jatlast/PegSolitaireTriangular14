@@ -11,11 +11,16 @@
 #                   why it would not work on that problem.
 
 # The following websites were referenced:
+#   For understanding the game itself
 #   https://en.wikipedia.org/wiki/Peg_solitaire
+#
+#   BFS & DFS matrix traversal code examples were helpful
+#   https://towardsdatascience.com/depth-breath-first-search-matrix-traversal-in-python-with-interactive-code-back-to-basics-31f1eca46f55
 #   
 ######################################################
 
 from random import shuffle # used to randomize the order in which moves are made
+import queue # for Breadth-First-Search (BFS)
 
 # Check if the current game state is already solved
 def CopyState(mCurrentState):
@@ -129,6 +134,7 @@ def AttemptStateChange(mActualState, changeType):
 # an individual node representing a specific game state
 class GameSpaceNode: 
     def __init__(self, sMove, sMoveType, nSore, mState):
+        self.explored = False
         self.move = sMove
         self.moveType = sMoveType
         self.score = nSore
@@ -142,7 +148,7 @@ class GameSpaceNode:
         }
     
     def __str__(self):
-        return "GameSpaceNode(move=" + self.move + ", moveType=" + self.moveType + ", score=" + str(self.score) + ")"
+        return "GameSpaceNode(explored=" + str(self.explored) + ", move=" + self.move + ", moveType=" + self.moveType + ", score=" + str(self.score) + ")"
 
 def PopulateGameSpaceTree(GameSpaceTree):
     mStartState =   [
@@ -183,7 +189,8 @@ def PopulateGameSpaceTree(GameSpaceTree):
 
     SolutionFound = False
     iterations = 0
-    for row in range(2, 15):
+#    for row in range(2, 15):
+    for row in range(2, 6):
         GameSpaceTree.append([]) # add an empty row 0
         for col in range(0, len(GameSpaceTree[row-1])):
             mCurrentState = GameSpaceTree[row-1][col].state
@@ -197,6 +204,8 @@ def PopulateGameSpaceTree(GameSpaceTree):
                 if stateChanged:
                     iterations = iterations + 1
                     score = GetScore(mNextState)
+                    if row != score - 1:
+                        print(f"Warning: {row} != {scroe - 1} should never happen")
                     GameSpaceTree[score-1].append(GameSpaceNode(movedFromTo, dictMoveTypes[randomMoves[i]], score, mNextState))
                     if IsSolved(mNextState):
                         print("Solved:")
@@ -207,24 +216,121 @@ def PopulateGameSpaceTree(GameSpaceTree):
 #               else:
 #                   print(f"Unable to move {randomMoves[i]} = {dictMoveTypes[randomMoves[i]]}")
 
+# Based on "BFS follows the following steps:"
+#   1. Check the starting node and add its neighbours to the queue.
+#   2. Mark the starting node as explored.
+#   3. Get the first node from the queue / remove it from the queue
+#   4. Check if node has already been visited.
+#   5. If not, go through the neighbours of the node.
+#   6. Add the neighbour nodes to the queue.
+#   7. Mark the node as explored.
+#   8. Loop through steps 3 to 7 until the queue is empty.
+#   https://pythoninwonderland.wordpress.com/2017/03/18/how-to-implement-breadth-first-search-in-python/
+def MatrixBFS(unexploredQ):
+    global GameSpaceTree
+
+    print("Begin MatrixBFS")
+    print(f"unexploredQ=({unexploredQ})")
+    # 3. Get the first node from the queue / remove it from the queue
+    current_index = unexploredQ.get()
+    current_x, current_y = current_index[0], current_index[1]
+    print(f"current_index = {current_index}")
+
+    if current_x != 0 and current_x != 0:
+        print("unexploredQ is not empty")
+        # 1.a Check the current dequeued node...
+#        if GameSpaceTree[current_x][current_y].score == 14:
+        if GameSpaceTree[current_x][current_y].score == 4:
+            return current_x, current_y
+        # 4. Check if node has already been visited.
+        if GameSpaceTree[current_x][current_y].explored == False:
+            # 5. If not, go through the neighbours of the node.
+            for col in range(current_y, len(GameSpaceTree[current_x+1])):
+                # 6. Add the neighbour nodes to the queue.
+                unexploredQ.put((current_x+1,col))
+                print(f"[{current_x+1}][{col}] = {GameSpaceTree[current_x+1][col]}")
+            # 7. Mark the node as explored.
+            GameSpaceTree[current_x][current_y].explored = True
+            print(f"1: unexploredQ: {unexploredQ.qsize()}")
+    else:
+        print("unexploredQ is empty")
+        # 1.a Check the starting node...
+        if GameSpaceTree[0][0].score == 14:
+            return 0, 0
+        for col in range(0, len(GameSpaceTree[1])):
+            # 1.b ...and add starting node's neighbours to the queue.
+            unexploredQ.put((1,col))
+            print(f"[{0}][{col}] = {GameSpaceTree[0][col]}")
+        # 2. Mark the starting node as explored.
+        GameSpaceTree[0][0].explored = True
+        print(f"2: unexploredQ: {unexploredQ.qsize()}")
+    
+    return MatrixBFS(unexploredQ)
+#    return unexploredQ
+
+
 # 2D matrix where rows are of equal game scores and columns are increasing game scores
 GameSpaceTree = []
 
 SolutionWasFound, NumberOfIterations = PopulateGameSpaceTree(GameSpaceTree)
 print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations.")
 
-#PopulateOneLevelOfGameSpaceTree(GameSpaceTree, mCurrentState)
-
 def PrintGameSpaceTree(GameSpaceTree):
     rows = len(GameSpaceTree)
     for r in range(0, rows):
         for c in range(0, len(GameSpaceTree[r])):
-            print(f"[{r}][{c}] = {GameSpaceTree[r][c]}")
+#            print(f"[{r}][{c}] = {GameSpaceTree[r][c]}")
+            print(f"[{r}][{c}]", end=" ")
+        print("\n")
 
-#PrintGameSpaceTree(GameSpaceTree)
+def PrintGameSpaceTreeBranchingFactors(GameSpaceTree):
+    totalNodes = 0
+    rows = len(GameSpaceTree)
+    for r in range(0, rows):
+        totalNodes = totalNodes + len(GameSpaceTree[r])
+        print(f"Row[{r}]\t has {str(len(GameSpaceTree[r]))} nodes")
+    print(f"For a total of {totalNodes} nodes")
 
-#print(f"Current Game Score: {GetScore(mCurrentState)}")
+PrintGameSpaceTreeBranchingFactors(GameSpaceTree)
 
-#print(f"The problem solved? {IsSolved(mCurrentState)}")
+# =======================================
+# Implement BFS
+def Borrowed_BFS(queue=None):
+    global GameSpaceTree
+    current_index = queue.get()
+    print(f"current_index = {current_index}")
 
+    current_x, current_y = current_index[0], current_index[1]
 
+    score = GameSpaceTree[current_y][current_x].score
+
+    if score == 3: return current_x,current_y
+
+    iterations = 0
+
+    while iterations < 10:
+        for n in range(current_x-1,current_x+2):
+            for m in range(current_y-1,current_y+2):
+                print(f"n[{n}]m[{m}]")
+                iterations = iterations + 1
+                if not (n==current_x and m==current_y) \
+                    and n>-1 and m>-1 \
+                    and n<len(GameSpaceTree[n]) and m<len(GameSpaceTree[m]) \
+                    and (n,m) not in queue.queue :
+                        queue.put((n,m))
+                else:
+                    print(f"else: {iterations}, qSize: {queue.qsize()}")
+    return Borrowed_BFS(queue) # currently causes an infinite loop
+
+PrintGameSpaceTree(GameSpaceTree)
+
+# 4. Queue for BFS
+#start_queue = queue.Queue()
+#start_queue.put((0,0))
+#BFS_results = BFS(start_queue)
+
+start_queue = queue.Queue()
+start_queue.put((0,0))
+#MatrixBFS(start_queue)
+#print(f"[{0}][{0}] = {GameSpaceTree[0][0]}")
+#print(f"Results of BFS = {BFS_results}")
