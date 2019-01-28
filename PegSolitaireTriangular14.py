@@ -21,6 +21,85 @@
 
 from random import shuffle # used to randomize the order in which moves are made
 import queue # for Breadth-First-Search (BFS)
+from collections import defaultdict # for Graph Path to prevent throwing errors for "key not found"
+
+# an individual node representing a specific game state
+class GameSpaceNode: 
+    def __init__(self, sMove, sMoveType, nSore, mState):
+        self.explored = False
+        self.move = sMove
+        self.moveType = sMoveType
+        self.score = nSore
+        self.state = mState
+
+    def __repr__(self):
+        return {
+            'move':self.move
+            , 'moveType':self.moveType
+            , 'score':self.score
+        }
+    
+    def __str__(self):
+        return "GameSpaceNode(explored=" + str(self.explored) + ", move=" + self.move + ", moveType=" + self.moveType + ", score=" + str(self.score) + ")"
+
+#####################################################
+############### Adapted External Code ###############
+# This code is contributed by Kanav Malhotra 
+#   https://www.geeksforgeeks.org/graph-and-its-representations/
+"""
+A Python program to demonstrate the adjacency
+list representation of the graph
+"""
+# A class to represent the adjacency list of the node
+class AdjNode:
+	def __init__(self, vertexNum):
+		self.vertex = vertexNum
+		self.next = None
+
+# A class to represent a graph. A graph 
+# is the list of the adjacency lists. 
+# Size of the array will be the no. of the 
+# vertices "V"
+class Graph:
+	def __init__(self, vertices):
+		self.V = vertices
+		self.graph = [None] * self.V
+
+	# Function to add an edge in an undirected graph
+	def add_edge(self, src, dest):
+		# Adding the node to the source node
+		node = AdjNode(dest)
+		node.next = self.graph[src]
+		self.graph[src] = node
+
+		# Adding the source node to the destination as
+		# it is the undirected graph
+		# node = AdjNode(src)
+		# node.next = self.graph[dest]
+		# self.graph[dest] = node
+
+	# Function to print the graph
+	def print_graph(self):
+		for i in range(self.V):
+			print("Adjacency list of vertex {}\n head".format(i), end="")
+			temp = self.graph[i]
+			while temp:
+				print(" -> {}".format(temp.vertex), end="")
+				temp = temp.next
+			print(" \n")
+
+# V = 5
+# graph = Graph(V)
+# graph.add_edge(0, 1)
+# graph.add_edge(0, 4)
+# graph.add_edge(1, 2)
+# graph.add_edge(1, 3)
+# graph.add_edge(1, 4)
+# graph.add_edge(2, 3)
+# graph.add_edge(3, 4)
+
+# graph.print_graph()
+#####################################################
 
 # Check if the current game state is already solved
 def CopyState(mCurrentState):
@@ -131,25 +210,6 @@ def AttemptStateChange(mActualState, changeType):
     # No change to game state
     return changedState, pegMoveFromTo, mCurrentState
 
-# an individual node representing a specific game state
-class GameSpaceNode: 
-    def __init__(self, sMove, sMoveType, nSore, mState):
-        self.explored = False
-        self.move = sMove
-        self.moveType = sMoveType
-        self.score = nSore
-        self.state = mState
-
-    def __repr__(self):
-        return {
-            'move':self.move
-            , 'moveType':self.moveType
-            , 'score':self.score
-        }
-    
-    def __str__(self):
-        return "GameSpaceNode(explored=" + str(self.explored) + ", move=" + self.move + ", moveType=" + self.moveType + ", score=" + str(self.score) + ")"
-
 def PopulateGameSpaceTree(GameSpaceTree):
     mStartState =   [
                         [-1,-1,-1,-1,1,-1,-1,-1,-1]
@@ -216,6 +276,82 @@ def PopulateGameSpaceTree(GameSpaceTree):
 #               else:
 #                   print(f"Unable to move {randomMoves[i]} = {dictMoveTypes[randomMoves[i]]}")
 
+def PopulateGameSpaceTreeAndPaths(GameSpaceTree, dictGameSpacePaths):
+    mStartState =   [
+                        [-1,-1,-1,-1,1,-1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,-1,1,-1,1,-1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,-1,1,-1,0,-1,1,-1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [-1,1,-1,1,-1,1,-1,1,-1]
+                        , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+                        , [1,-1,1,-1,1,-1,1,-1,1]
+                    ]
+    #nodes = len(mStartState)
+    #print(f"nodes={nodes}")
+
+    ##### Move 0 = Root
+    # Insert root node into Game Space Tree
+    # Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
+    GameSpaceTree.append([]) # add an empty row 0
+    GameSpaceTree[0].append(GameSpaceNode("4:4", "Static", 1, mStartState))
+
+#    dictGameSpacePaths["4:4"] = ["root"]
+
+    ##### Move 1 = Singular Left Leaf
+    # Insert first and only left node into Game Space Tree
+    # Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
+    stateChanged, movedFromTo, mNextState = AttemptStateChange(mStartState, "Diagonal_Down_Left")
+    GameSpaceTree.append([]) # add an empty row 1
+    GameSpaceTree[1].append(GameSpaceNode(movedFromTo, "Diagonal_Down_Left", 2, mNextState))
+
+    dictGameSpacePaths["4:4"] = [movedFromTo]
+
+    dictMoveTypes = {
+          0 : "Diagonal_Down_Left"
+        , 1 : "Diagonal_Down_Right"
+        , 2 : "Diagonal_Up_Left"
+        , 3 : "Diagonal_Up_Right"
+        , 4 : "Left"
+        , 5 : "Right"
+    }
+
+    SolutionFound = False
+    iterations = 0
+#    for row in range(2, 15):
+    for row in range(2, 6):
+        GameSpaceTree.append([]) # add an empty row 0
+        for col in range(0, len(GameSpaceTree[row-1])):
+            mCurrentState = GameSpaceTree[row-1][col].state
+            mCurrentMove = GameSpaceTree[row-1][col].move
+#            print(GameSpaceTree[row-1][col])
+#            PrintState(mCurrentState)
+            # randomize the oder in which moves are attempted
+            randomMoves = [0,1,2,3,4,5]
+            shuffle(randomMoves)
+            for i in range(0, 6):
+                stateChanged, movedFromTo, mNextState = AttemptStateChange(mCurrentState, dictMoveTypes[randomMoves[i]])
+                if stateChanged:
+                    iterations = iterations + 1
+                    score = GetScore(mNextState)
+                    if row != score - 1:
+                        print(f"Warning: {row} != {scroe - 1} should never happen")
+                    GameSpaceTree[score-1].append(GameSpaceNode(movedFromTo, dictMoveTypes[randomMoves[i]], score, mNextState))
+                    # add path
+                    if dictGameSpacePaths[mCurrentMove] is None:
+                        dictGameSpacePaths[mCurrentMove] = [movedFromTo]
+                    else:
+                        dictGameSpacePaths[mCurrentMove] += [movedFromTo]
+
+                    if IsSolved(mNextState):
+                        print("Solved:")
+                        PrintState(mNextState)
+                        SolutionFound = True
+                        return SolutionFound, iterations
+    return SolutionFound, iterations
+
+
 # Based on "BFS follows the following steps:"
 #   1. Check the starting node and add its neighbours to the queue.
 #   2. Mark the starting node as explored.
@@ -272,7 +408,19 @@ def MatrixBFS(unexploredQ):
 # 2D matrix where rows are of equal game scores and columns are increasing game scores
 GameSpaceTree = []
 
-SolutionWasFound, NumberOfIterations = PopulateGameSpaceTree(GameSpaceTree)
+dictGameSpacePaths = defaultdict(list)
+
+# dictGameSpacePaths['a:b'] = ["a"]
+# if dictGameSpacePaths['a:b'] is None:
+#     dictGameSpacePaths['a:b'] = ["b"]
+# else:
+#     dictGameSpacePaths['a:b'] += ["b"]
+# print(dictGameSpacePaths['a:b'])
+
+SolutionWasFound, NumberOfIterations = PopulateGameSpaceTreeAndPaths(GameSpaceTree, dictGameSpacePaths)
+print(dictGameSpacePaths)
+
+#SolutionWasFound, NumberOfIterations = PopulateGameSpaceTree(GameSpaceTree)
 print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations.")
 
 def PrintGameSpaceTree(GameSpaceTree):
