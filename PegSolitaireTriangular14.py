@@ -16,6 +16,9 @@
 #
 #   BFS & DFS matrix traversal code examples were helpful
 #   https://towardsdatascience.com/depth-breath-first-search-matrix-traversal-in-python-with-interactive-code-back-to-basics-31f1eca46f55
+#
+#   Generate a graph using Dictionary in Python
+#   https://www.geeksforgeeks.org/generate-graph-using-dictionary-python/
 #   
 ######################################################
 
@@ -42,66 +45,7 @@ class GameSpaceNode:
     def __str__(self):
         return "GameSpaceNode(explored=" + str(self.explored) + ", move=" + self.move + ", moveType=" + self.moveType + ", score=" + str(self.score) + ")"
 
-#####################################################
-############### Adapted External Code ###############
-# This code is contributed by Kanav Malhotra 
-#   https://www.geeksforgeeks.org/graph-and-its-representations/
-"""
-A Python program to demonstrate the adjacency
-list representation of the graph
-"""
-# A class to represent the adjacency list of the node
-class AdjNode:
-	def __init__(self, vertexNum):
-		self.vertex = vertexNum
-		self.next = None
-
-# A class to represent a graph. A graph 
-# is the list of the adjacency lists. 
-# Size of the array will be the no. of the 
-# vertices "V"
-class Graph:
-	def __init__(self, vertices):
-		self.V = vertices
-		self.graph = [None] * self.V
-
-	# Function to add an edge in an undirected graph
-	def add_edge(self, src, dest):
-		# Adding the node to the source node
-		node = AdjNode(dest)
-		node.next = self.graph[src]
-		self.graph[src] = node
-
-		# Adding the source node to the destination as
-		# it is the undirected graph
-		# node = AdjNode(src)
-		# node.next = self.graph[dest]
-		# self.graph[dest] = node
-
-	# Function to print the graph
-	def print_graph(self):
-		for i in range(self.V):
-			print("Adjacency list of vertex {}\n head".format(i), end="")
-			temp = self.graph[i]
-			while temp:
-				print(" -> {}".format(temp.vertex), end="")
-				temp = temp.next
-			print(" \n")
-
-# V = 5
-# graph = Graph(V)
-# graph.add_edge(0, 1)
-# graph.add_edge(0, 4)
-# graph.add_edge(1, 2)
-# graph.add_edge(1, 3)
-# graph.add_edge(1, 4)
-# graph.add_edge(2, 3)
-# graph.add_edge(3, 4)
-
-# graph.print_graph()
-#####################################################
-
-# Check if the current game state is already solved
+# deep-copy the given game state
 def CopyState(mCurrentState):
     # initialized to all -1's
     mStateCopy =   [
@@ -141,7 +85,7 @@ def PrintState(mCurrentState):
             print("\n", end="")
             printed = False
 
-# Check if the current game state is already solved
+# Check if the given game state is already solved
 def IsSolved(mCurrentState):
     sum = 0
     for x in range(0, 9):
@@ -155,7 +99,7 @@ def IsSolved(mCurrentState):
     else:
         print(f"Warning: sum={sum} should never happen.")
 
-# Check if the current game state is already solved
+# calculate the score of the given game state
 def GetScore(mCurrentState):
     sum = 0
     for x in range(0, 9):
@@ -176,6 +120,9 @@ def AttemptStateChange(mActualState, changeType):
     pegMoveFromTo = "N/A"
     xDif = 0
     yDif = 0
+    # precalculate the necessary x,y moves to execute for all six possible moves
+    # Note: the x & y moves are opposite than my original concept developed using Excel
+    #   This must be because Python is traversing in Column-major instead of Row-major order
     if changeType == "Diagonal_Down_Left":
         xDif = xDif + 2
         yDif = yDif - 1
@@ -196,6 +143,7 @@ def AttemptStateChange(mActualState, changeType):
         print(f"Warning: changeType({changeType}) should never happen")
   
 #    print(f"Attempt {changeType} state change")
+    # Game board is represented in a 9x9 matrix
     for x in range(0, 9):
         for y in range(0, 9):
             if mCurrentState[x][y] == 0:
@@ -210,6 +158,9 @@ def AttemptStateChange(mActualState, changeType):
     # No change to game state
     return changedState, pegMoveFromTo, mCurrentState
 
+# First attempt at populating the entire game space tree as a matrix
+# However, it does not preserver equal length rows, so it was not usable for subsequent
+#   graph (as a matrix) traversals using BFS nor DFS
 def PopulateGameSpaceTree(GameSpaceTree):
     mStartState =   [
                         [-1,-1,-1,-1,1,-1,-1,-1,-1]
@@ -276,6 +227,9 @@ def PopulateGameSpaceTree(GameSpaceTree):
 #               else:
 #                   print(f"Unable to move {randomMoves[i]} = {dictMoveTypes[randomMoves[i]]}")
 
+# A subsequent attempt to populate the entire game space tree by augmenting the above
+# function PopulateGameSpaceTree() to simultaneously populate a Python dictionary to represent
+# keys as nodes and associated values as a list of the node's connected edges 
 def PopulateGameSpaceTreeAndPaths(GameSpaceTree, dictGameSpacePaths):
     mStartState =   [
                         [-1,-1,-1,-1,1,-1,-1,-1,-1]
@@ -351,7 +305,7 @@ def PopulateGameSpaceTreeAndPaths(GameSpaceTree, dictGameSpacePaths):
                         return SolutionFound, iterations
     return SolutionFound, iterations
 
-
+# First attempt to traverse the matrix created by PopulateGameSpaceTree() which proved unsuccessful
 # Based on "BFS follows the following steps:"
 #   1. Check the starting node and add its neighbours to the queue.
 #   2. Mark the starting node as explored.
@@ -404,7 +358,6 @@ def MatrixBFS(unexploredQ):
     return MatrixBFS(unexploredQ)
 #    return unexploredQ
 
-
 # 2D matrix where rows are of equal game scores and columns are increasing game scores
 GameSpaceTree = []
 
@@ -423,6 +376,7 @@ print(dictGameSpacePaths)
 #SolutionWasFound, NumberOfIterations = PopulateGameSpaceTree(GameSpaceTree)
 print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations.")
 
+# Note: requires PopulateGameSpaceTree() to have been executed first
 def PrintGameSpaceTree(GameSpaceTree):
     rows = len(GameSpaceTree)
     for r in range(0, rows):
@@ -431,6 +385,7 @@ def PrintGameSpaceTree(GameSpaceTree):
             print(f"[{r}][{c}]", end=" ")
         print("\n")
 
+# Note: requires PopulateGameSpaceTree() to have been executed first
 def PrintGameSpaceTreeBranchingFactors(GameSpaceTree):
     totalNodes = 0
     rows = len(GameSpaceTree)
@@ -441,7 +396,10 @@ def PrintGameSpaceTreeBranchingFactors(GameSpaceTree):
 
 PrintGameSpaceTreeBranchingFactors(GameSpaceTree)
 
-# =======================================
+#####################################################
+############# Reference External Code ###############
+# This code requires numpy and is only here as reference
+#   https://towardsdatascience.com/depth-breath-first-search-matrix-traversal-in-python-with-interactive-code-back-to-basics-31f1eca46f55
 # Implement BFS
 def Borrowed_BFS(queue=None):
     global GameSpaceTree
@@ -469,6 +427,7 @@ def Borrowed_BFS(queue=None):
                 else:
                     print(f"else: {iterations}, qSize: {queue.qsize()}")
     return Borrowed_BFS(queue) # currently causes an infinite loop
+#####################################################
 
 PrintGameSpaceTree(GameSpaceTree)
 
