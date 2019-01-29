@@ -1,7 +1,6 @@
 # PegSolitaireTriangular14
 
 PegSolitaireTriangular14 is the result of the following homework assignment.
-
 ```
 Master's Degree: University of Michigan - Computer Science & Information Systems
 Course: CSC 546 - Advanced Artificial Intelligence
@@ -15,14 +14,13 @@ Assignment Homework 2: Due: 01/29/2019 5:59 PM | Began Coding: 01/25/2019 11:20 
                 explain thru complexity analysis of space and memory requirements due 
                 to depth and branching factor why it would not work on that problem.
 ```
-
 ## False Starts
 
 1) Tried to create the entire game state tree as a matrix without keeping matrix dimentionality consistant.
 2) Tried to do BFS on the inconstant matrix.
 3) Tried to create a graph of the game state tree using a Python dictionary to represent nodes as keys and edges as lists.
 
-## Final Solution(s)
+## Final Solutions
 
 1) DFS - Adding a "parent" variable to the GameStateNode class allowed for recreating the moves
 from the solution state back to the start state once the solution node had been found.
