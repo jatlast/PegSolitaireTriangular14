@@ -22,6 +22,12 @@
 from random import shuffle # used to randomize the order in which moves are made
 import queue # for Breadth-First-Search (BFS)
 
+# Note: Only BFS (working) or DFS (finds multiple solutions) can be run at a time
+versionToRun = "BFS"
+#versionToRun = "DFS"
+
+##########################
+#### Global Variables ####
 # Start state of game represented as a 9x9 matrix
 mStartState =   [
                     [-1,-1,-1,-1,1,-1,-1,-1,-1]
@@ -34,15 +40,29 @@ mStartState =   [
                     , [-1,-1,-1,-1,-1,-1,-1,-1,-1]
                     , [1,-1,1,-1,1,-1,1,-1,1]
                 ]
+
+dictMoveTypes = {
+    0 : "Diagonal_Down_Left"
+    , 1 : "Diagonal_Down_Right"
+    , 2 : "Diagonal_Up_Left"
+    , 3 : "Diagonal_Up_Right"
+    , 4 : "Left"
+    , 5 : "Right"
+}
+##########################
+
+############################## Shared DFS/BFS Code ##############################
+
 # an individual node representing a specific game state
 class GameSpaceNode: 
     def __init__(self, sMove, sMoveType, nSore, mState):
-        self.explored = False
-        self.solution = False
         self.move = sMove
         self.moveType = sMoveType
         self.score = nSore
         self.state = mState
+        self.explored = False   # used for DFS visited & BFS explored
+        self.processed = False  # used for DFS processed
+        self.solution = False
         self.gsParent = None
 
     def __repr__(self):
@@ -171,6 +191,8 @@ def AttemptStateChange(mActualState, changeType):
     # No change to game state
     return changedState, pegMoveFromTo, mCurrentState
 
+############################## BFS Code ##############################
+
 # Explore and create game space tree on-demand while traversing in BFS fashion
 # Based on "BFS follows the following steps:"
 #   1. Check the starting node 
@@ -185,6 +207,7 @@ def AttemptStateChange(mActualState, changeType):
 #   https://pythoninwonderland.wordpress.com/2017/03/18/how-to-implement-breadth-first-search-in-python/
 def BFS_PopulateGameSpaceTreeOnDemand():
     global mStartState
+    global dictMoveTypes
 
     # not initially used but still returned for now.
     solutionFound = False
@@ -217,15 +240,6 @@ def BFS_PopulateGameSpaceTreeOnDemand():
         # 5. Check if node has already been visited.
         if not gsDequeued.explored:
 
-            dictMoveTypes = {
-                0 : "Diagonal_Down_Left"
-                , 1 : "Diagonal_Down_Right"
-                , 2 : "Diagonal_Up_Left"
-                , 3 : "Diagonal_Up_Right"
-                , 4 : "Left"
-                , 5 : "Right"
-            }
-
     #        print(gsDequeued)
     #        PrintState(gsDequeued.state)
 
@@ -248,7 +262,6 @@ def BFS_PopulateGameSpaceTreeOnDemand():
                     if IsSolved(mNextState):
                         gsSolutionNode = gsNewNode
                         gsSolutionNode.solution = True
-                        print(f"iterations({iterations}): unexploredQ({unexploredQ.qsize()})")
                         print("Solved:")
                         PrintState(mNextState)
                         print("--------------\n")
@@ -257,6 +270,7 @@ def BFS_PopulateGameSpaceTreeOnDemand():
             # 8. Mark the node as explored.
             gsDequeued.explored = True
 
+    print(f"iterations({iterations}): unexploredQ({unexploredQ.qsize()})")
     return solutionFound, iterations, gsSolutionNode
 
 def PrintBFSolution(SolutionWasFound, gsSolutionNode):
@@ -278,7 +292,178 @@ def PrintBFSolution(SolutionWasFound, gsSolutionNode):
             print(f"{gsParentNode.move} #{iterations}")
             iterations = iterations + 1
 
-SolutionWasFound, NumberOfIterations, gsSolutionNode = BFS_PopulateGameSpaceTreeOnDemand()
-print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
+########################
+### BFS driving code ###
+# Note: Only DFS or BFS can be run at a time
+if versionToRun == "BFS":
+    SolutionWasFound, NumberOfIterations, gsSolutionNode = BFS_PopulateGameSpaceTreeOnDemand()
+    print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
+    PrintBFSolution(SolutionWasFound, gsSolutionNode)
+########################
 
-PrintBFSolution(SolutionWasFound, gsSolutionNode)
+############################## DFS Code ##############################
+
+# Explore and create game space tree on-demand while traversing in DFS fashion
+# Based on DFS solution steps explained in CSC 575 Lecture 7 PPT document (slides 39-61):"
+#   1. Pick a starting node [the root] and build a stack of nodes to visit
+#   2. Add the node to the stack and mark it as "visited"
+#   3. Pick any connected node that is "unvisited" and "unprocessed"
+#   4. Mark selected node as "visited" and add it to the stack
+#   5. Repeat steps 3 & 4 until no further nodes are connected
+#   6. Pop node off the stack and mark it as "processed" and add it to "processed" list
+#   7. Use the node from the top of the stack and repeat steps 3 to 6
+#   8. When stack is empty push a new "unvisited" and "unprocessed" node to the stack
+#   9. Loop through steps 3 to 8 until the solution has been found or there are no more "unvisited" and "unprocessed" nodes
+def DFS_PopulateGameSpaceTreeOnDemand():
+    global mStartState
+    global dictMoveTypes
+    dfsVisitedStack = []
+    dfsProcessedList = []
+
+    # not initially used but still returned for now.
+    solutionFound = False
+    iterations = 0
+    gsSolutionNode = None
+
+    ##### Move 0 = Root: needed for gsMoveOne's parent
+    gsMoveZero = GameSpaceNode("4:4", "StartState", 1, mStartState)
+    # 1. Pick a starting node [the root] and build a stack of nodes to visit
+    # 2. Add the node to the stack and mark it as "visited"
+    gsMoveZero.visited = True
+    dfsVisitedStack.append(gsMoveZero)
+
+    ##### Move 1 = Singular Left Leaf
+    # Insert first and only left node into Game Space Tree
+    # Note: because of symmetry, the entire right (or left) half of the state space tree can be ignored
+    stateChanged, movedFromTo, mNextState = AttemptStateChange(mStartState, "Diagonal_Down_Left")
+    gsMoveOne = GameSpaceNode(movedFromTo, "Diagonal_Down_Left", 2, mNextState)
+#    gsMoveOne.gsParent = gsMoveZero
+    # 3. Pick any connected node that is "unvisited" and "unprocessed"
+    # 4. Mark selected node as "visited" and add it to the stack
+    gsMoveOne.visited = True
+    dfsVisitedStack.append(gsMoveOne)
+
+    # 5. Repeat steps 3 & 4 until no further nodes are connected
+    # randomize the oder in which moves are attempted
+    randomMoves = [0,1,2,3,4,5]
+    shuffle(randomMoves)
+    for i in range(0, 6):
+        stateChanged, movedFromTo, mNextState = AttemptStateChange(gsMoveOne.state, dictMoveTypes[randomMoves[i]])
+        if stateChanged:
+            iterations = iterations + 1
+            print(f"1 iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
+        
+            score = GetScore(mNextState)
+
+            gsNewNode = GameSpaceNode(movedFromTo, dictMoveTypes[randomMoves[i]], score, mNextState)
+#               gsNewNode.gsParent = gsDequeued
+            # 3. Pick any connected node that is "unvisited" and "unprocessed"
+            # 4. Mark selected node as "visited" and add it to the stack
+            gsNewNode.visited = True
+            dfsVisitedStack.append(gsNewNode)
+
+            if IsSolved(mNextState):
+                solutionFound = True
+                gsSolutionNode = dfsVisitedStack.pop()
+                gsSolutionNode.solution = True
+                # 6. Pop node off the stack and mark it as "processed" and add it to "processed" list
+                gsSolutionNode.processed = True
+                dfsProcessedList.append(gsSolutionNode)
+                print("1 Solved:")
+                PrintState(mNextState)
+                print("--------------\n")
+                return solutionFound, iterations, dfsProcessedList
+            else:
+                print(f"#{iterations} Call Recurse:")
+                DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessedList)
+        # 5. Repeat steps 3 & 4 until no further nodes are connected
+        # 6. Pop node off the stack and mark it as "processed" and add it to "processed" list
+        # 7. Use the node from the top of the stack and repeat steps 3 to 6
+        #gsPoppedNode = dfsVisitedStack.pop()
+        #dfsProcessedList.append(gsPoppedNode)
+
+    print(f"2 iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))}0 | dfsProcessedList({str(len(dfsProcessedList))})")
+    return solutionFound, iterations, dfsProcessedList
+
+# Recursive helper function of DFS_PopulateGameSpaceTreeOnDemand() above
+def DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessedList):
+    global dictMoveTypes
+    global dfsFirstSolutionFound
+    global dftTotalSolutionsFound
+    solutionFound = False
+    gsSolutionNode = None
+    gsNewNode = None
+
+    print(f"Recurse: dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
+
+    # always start by looking at the top of the stack
+    gsStackTopNode = dfsVisitedStack.pop()
+    if gsStackTopNode.solution:
+        return solutionFound, dfsVisitedStack, dfsProcessedList
+    elif not gsStackTopNode.processed:
+        # put the node back in the stack because it was only popped to use below
+        dfsVisitedStack.append(gsStackTopNode)
+    else:
+        print(f"Warning: node at the top of the stack already processed {gsStackTopNode}")
+
+    # randomize the oder in which moves are attempted
+    randomMoves = [0,1,2,3,4,5]
+    shuffle(randomMoves)
+    for i in range(0, 6):
+        stateChanged, movedFromTo, mNextState = AttemptStateChange(gsStackTopNode.state, dictMoveTypes[randomMoves[i]])
+        if stateChanged:
+#            iterations = iterations + 1
+#            print(f"iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))} | dfsProcessedList({str(len(dfsProcessedList))})")
+        
+            score = GetScore(mNextState)
+
+            gsNewNode = GameSpaceNode(movedFromTo, dictMoveTypes[randomMoves[i]], score, mNextState)
+#               gsNewNode.gsParent = gsDequeued
+            # 3. Pick any connected node that is "unvisited" and "unprocessed"
+            # 4. Mark selected node as "visited" and add it to the stack
+            gsNewNode.visited = True
+            dfsVisitedStack.append(gsNewNode)
+
+            if IsSolved(mNextState):
+                dftTotalSolutionsFound = dftTotalSolutionsFound + 1
+                if dftTotalSolutionsFound == 1:
+                    dfsFirstSolutionFound = dfsVisitedStack
+                solutionFound = True
+                gsSolutionNode = dfsVisitedStack.pop()
+                gsSolutionNode.solution = True
+                # 6. Pop node off the stack and mark it as "processed" and add it to "processed" list
+                gsSolutionNode.processed = True
+                dfsProcessedList.append(gsSolutionNode)
+                print("2 Solved:")
+                PrintState(mNextState)
+                print("--------------\n")
+                return solutionFound, dfsVisitedStack, dfsProcessedList
+            else:
+                DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessedList)
+        # else:
+        #     print(f"State unchanges for node{gsStackTopNode.move}")
+
+    # 5. Repeat steps 3 & 4 until no further nodes are connected
+    # 6. Pop node off the stack and mark it as "processed" and add it to "processed" list
+    # 7. Use the node from the top of the stack and repeat steps 3 to 6
+    if len(dfsVisitedStack) > 0:
+        gsPoppedNode = dfsVisitedStack.pop()
+        dfsProcessedList.append(gsPoppedNode)
+#        DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessedList)
+    else:
+        print(f"Warning: stack is empty")
+    return solutionFound, dfsVisitedStack, dfsProcessedList
+
+########################
+### DFS driving code ###
+# Note: Only DFS or BFS can be run at a time
+if versionToRun == "DFS":
+    dfsFirstSolutionFound = None
+    dftTotalSolutionsFound = 0
+    SolutionWasFound, NumberOfIterations, dfsProcessedList = DFS_PopulateGameSpaceTreeOnDemand()
+    print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
+
+    for i in range(0, len(dfsFirstSolutionFound)):
+        PrintState(dfsFirstSolutionFound[i].state)
+        print(f"{dfsFirstSolutionFound[i].move} #{i}")
+

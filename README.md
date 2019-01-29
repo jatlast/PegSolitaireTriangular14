@@ -24,8 +24,9 @@ Assignment Homework 2: Due: 01/29/2019 5:59 PM | Began Coding: 01/25/2019 11:20 
 
 ## Final Solution(s)
 
-1) Adding a "parent" variable to the GameStateNode class allowed for recreating the moves
+1) DFS - Adding a "parent" variable to the GameStateNode class allowed for recreating the moves
 from the solution state back to the start state once the solution node had been found.
+2) BFS - Implemented recursive code, however, it currently finds multiplle paths to the solution instead of a single, optimal solution.
 
 ## Chosen Technologies
 
