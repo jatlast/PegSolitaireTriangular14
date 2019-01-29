@@ -24,7 +24,6 @@
 
 from random import shuffle # used to randomize the order in which moves are made
 import queue # for Breadth-First-Search (BFS)
-from collections import defaultdict # for Graph Path to prevent throwing errors for "key not found"
 
 # Start state of game represented as a 9x9 matrix
 mStartState =   [
@@ -190,12 +189,15 @@ def AttemptStateChange(mActualState, changeType):
 #   7. Add the neighbour nodes to the queue.
 #   8. Mark the node as explored.
 #   9. Loop through steps 4 to 8 until the queue is empty. (Note: Python won't recurse far enough)
-def BFS_PopulateGameSpaceTreeEdgesOnDemand(dictGameSpaceEdges):
+# Note: Removed dictGameSpaceEdges data structure as unnecessary for solving the problem
+#   because it does not appear to be an accurate adjacency representation once complete.
+def BFS_PopulateGameSpaceTreeOnDemand():
     global mStartState
 
     # not initially used but still returned for now.
     solutionFound = False
     iterations = 0
+    gsSolutionNode = None
 
     ##### Move 0 = Root: needed for gsMoveOne's parent
     gsMoveZero = GameSpaceNode("4:4", "StartState", 1, mStartState)
@@ -206,7 +208,6 @@ def BFS_PopulateGameSpaceTreeEdgesOnDemand(dictGameSpaceEdges):
     stateChanged, movedFromTo, mNextState = AttemptStateChange(mStartState, "Diagonal_Down_Left")
     gsMoveOne = GameSpaceNode(movedFromTo, "Diagonal_Down_Left", 2, mNextState)
     gsMoveOne.gsParent = gsMoveZero
-    dictGameSpaceEdges[movedFromTo] = [gsMoveOne]
 
     # Create the unexploredQ and add the Singular Left Leaf to the unexploredQ
     unexploredQ = queue.Queue()
@@ -252,35 +253,26 @@ def BFS_PopulateGameSpaceTreeEdgesOnDemand(dictGameSpaceEdges):
                     gsNewNode.gsParent = gsDequeued
                     unexploredQ.put(gsNewNode)
 
-                    # Add all neighbor nodes to the edge dictionary
-                    if dictGameSpaceEdges[gsDequeued.move] is None:
-#                        dictGameSpaceEdges[gsDequeued.move] = [gsNewNode]
-                        dictGameSpaceEdges[gsDequeued.move] = [gsDequeued, gsNewNode]
-                    else:
-                        dictGameSpaceEdges[gsDequeued.move] += [gsNewNode]
-
                     if IsSolved(mNextState):
-                        gsNewNode.solution = True
+                        gsSolutionNode = gsNewNode
+                        gsSolutionNode.solution = True
                         print(f"iterations({iterations}): unexploredQ({unexploredQ.qsize()})")
                         print("Solved:")
                         PrintState(mNextState)
                         print("--------------\n")
                         solutionFound = True
-                        return solutionFound, iterations, gsNewNode
+#                        return solutionFound, iterations, gsNewNode
 
             # 8. Mark the node as explored.
             gsDequeued.explored = True
 
     # return as yet to be decided
-    return solutionFound, iterations, gsNewNode
-
+    return solutionFound, iterations, gsSolutionNode
 
 # 2D matrix where rows are of equal game scores and columns are increasing game scores
 GameSpaceTree = []
 
-dictGameSpaceEdges = defaultdict(list)
-
-SolutionWasFound, NumberOfIterations, gsSolutionNode = BFS_PopulateGameSpaceTreeEdgesOnDemand(dictGameSpaceEdges)
+SolutionWasFound, NumberOfIterations, gsSolutionNode = BFS_PopulateGameSpaceTreeOnDemand()
 print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
 
 if SolutionWasFound:
@@ -305,34 +297,6 @@ if SolutionWasFound:
 #        print(f"{gsParentNode.moveType} {gsParentNode.move} #{iterations}")
         print(f"{gsParentNode.move} #{iterations}")
         iterations = iterations + 1
-
-def PrintGameSpaceEdges(dictGameSpaceEdges):
-    solutionKey = ""
-    stepsToSolution = 0
-    count = 0
-    for key in dictGameSpaceEdges.keys():
-        print(f"key1={key}")
-        count = 0
-        for i in range(0, len(dictGameSpaceEdges[key])):
-            count = count + 1
-            if dictGameSpaceEdges[key][i].solution:
-                solutionKey = key
-                stepsToSolution = count
-                print(f"move={dictGameSpaceEdges[key][i].move} sol={str(dictGameSpaceEdges[key][i].solution)}", end=" ")
-            else:
-                print(f"move={dictGameSpaceEdges[key][i].move}", end=" ")
-        print("\n")
-
-    # print solution
-    print(f"key={solutionKey} contains the {stepsToSolution} moves leading to the solution")
-    for i in range(0, len(dictGameSpaceEdges[solutionKey]) ):
-        PrintState(dictGameSpaceEdges[solutionKey][i].state)
-        if dictGameSpaceEdges[solutionKey][i].solution:
-            print(f"move={dictGameSpaceEdges[solutionKey][i].move} sol={str(dictGameSpaceEdges[solutionKey][i].solution)}")
-        else:
-            print(f"move={dictGameSpaceEdges[solutionKey][i].move}")
-
-#PrintGameSpaceEdges(dictGameSpaceEdges)
 
 # Note: requires PopulateGameSpaceTree() to have been executed first
 def PrintGameSpaceTree(GameSpaceTree):
