@@ -259,53 +259,26 @@ def BFS_PopulateGameSpaceTreeOnDemand():
 
     return solutionFound, iterations, gsSolutionNode
 
-# 2D matrix where rows are of equal game scores and columns are increasing game scores
-GameSpaceTree = []
+def PrintBFSolution(SolutionWasFound, gsSolutionNode):
+    if SolutionWasFound:
+        print("The solution from last move to first")
+        iterations = 0
+        score = gsSolutionNode.score
+        PrintState(gsSolutionNode.state)
+        print(f"{gsSolutionNode.move} #{iterations}")
+        iterations = iterations + 1
+        gsParentNode = gsSolutionNode.gsParent
+        PrintState(gsParentNode.state)
+        print(f"{gsParentNode.move} #{iterations}")
+        iterations = iterations + 1
+        while score > 1 and iterations < 100:
+            gsParentNode = gsParentNode.gsParent
+            score = gsParentNode.score
+            PrintState(gsParentNode.state)
+            print(f"{gsParentNode.move} #{iterations}")
+            iterations = iterations + 1
 
 SolutionWasFound, NumberOfIterations, gsSolutionNode = BFS_PopulateGameSpaceTreeOnDemand()
 print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
 
-if SolutionWasFound:
-    print("The solution from last move to first")
-    iterations = 0
-    score = gsSolutionNode.score
-    PrintState(gsSolutionNode.state)
-#    print(f"move={gsSolutionNode.move}")
-#    print(f"{gsSolutionNode.moveType} {gsSolutionNode.move} #{iterations}")
-    print(f"{gsSolutionNode.move} #{iterations}")
-    iterations = iterations + 1
-    gsParentNode = gsSolutionNode.gsParent
-    PrintState(gsParentNode.state)
-#    print(f"move={gsParentNode.move}")
-#    print(f"{gsParentNode.moveType} {gsParentNode.move} #{iterations}")
-    print(f"{gsParentNode.move} #{iterations}")
-    iterations = iterations + 1
-    while score > 1 and iterations < 100:
-        gsParentNode = gsParentNode.gsParent
-        score = gsParentNode.score
-        PrintState(gsParentNode.state)
-#        print(f"{gsParentNode.moveType} {gsParentNode.move} #{iterations}")
-        print(f"{gsParentNode.move} #{iterations}")
-        iterations = iterations + 1
-
-# Note: requires PopulateGameSpaceTree() to have been executed first
-def PrintGameSpaceTree(GameSpaceTree):
-    rows = len(GameSpaceTree)
-    for r in range(0, rows):
-        for c in range(0, len(GameSpaceTree[r])):
-#            print(f"[{r}][{c}] = {GameSpaceTree[r][c]}")
-            print(f"[{r}][{c}]", end=" ")
-        print("\n")
-
-# Note: requires PopulateGameSpaceTree() to have been executed first
-def PrintGameSpaceTreeBranchingFactors(GameSpaceTree):
-    totalNodes = 0
-    rows = len(GameSpaceTree)
-    for r in range(0, rows):
-        totalNodes = totalNodes + len(GameSpaceTree[r])
-        print(f"Row[{r}]\t has {str(len(GameSpaceTree[r]))} nodes")
-    print(f"For a total of {totalNodes} nodes")
-
-#PrintGameSpaceTreeBranchingFactors(GameSpaceTree)
-
-#PrintGameSpaceTree(GameSpaceTree)
+PrintBFSolution(SolutionWasFound, gsSolutionNode)
