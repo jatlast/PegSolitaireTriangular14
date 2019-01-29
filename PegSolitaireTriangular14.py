@@ -2,9 +2,9 @@
 # CSC 546 (Began Coding: 01/25/2019 11:20 PM | Due: 01/29/2019 5:59 PM)
 #   Homework 2
 #   2.0 Programming:
-#       ii) For graduate students find a puzzle (the puzzle below is a fun
-#           one) or other problem of interest and code it up. Use either the
-#           BFS or the DFS to do this.
+#       ii) For graduate students find a puzzle (the marble solitaire game
+#           with 14 marbles is a fun one) or other problem of interest and 
+#           code it up. Use either the BFS or the DFS to do this.
 #               a) Extra Credit (5 points) – Also write a breadth-first search
 #                   or explain thru complexity analysis of space and
 #                   memory requirements due to depth and branching factor
