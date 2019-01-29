@@ -1,5 +1,5 @@
-######################################################
-# CSC 546 (Began: 01/25/2019 11:20 PM)
+########################################################################
+# CSC 546 (Began Coding: 01/25/2019 11:20 PM | Due: 01/29/2019 5:59 PM)
 #   Homework 2
 #   2.0 Programming:
 #       ii) For graduate students find a puzzle (the puzzle below is a fun
@@ -14,13 +14,10 @@
 #   For understanding the game itself
 #   https://en.wikipedia.org/wiki/Peg_solitaire
 #
-#   BFS & DFS matrix traversal code examples were helpful
-#   https://towardsdatascience.com/depth-breath-first-search-matrix-traversal-in-python-with-interactive-code-back-to-basics-31f1eca46f55
+#   How to Implement Breadth-First Search in Python
+#   https://pythoninwonderland.wordpress.com/2017/03/18/how-to-implement-breadth-first-search-in-python/
 #
-#   Generate a graph using Dictionary in Python
-#   https://www.geeksforgeeks.org/generate-graph-using-dictionary-python/
-#   
-######################################################
+########################################################################
 
 from random import shuffle # used to randomize the order in which moves are made
 import queue # for Breadth-First-Search (BFS)
@@ -174,12 +171,8 @@ def AttemptStateChange(mActualState, changeType):
     # No change to game state
     return changedState, pegMoveFromTo, mCurrentState
 
-# Attempt to build the graph's edge dictionary on-demand while traversing in BFS fashion
-# Example dictionary entry: '2:5-6:3': ['8:6-8:2', '6:7-2:5'].
-# Note: verticies are labled by the move (i.e., '2:5-6:3') that brought them into their 
-#   current game state
-# Note: The first node in every edge list is the identical to the dictionary entry's key
-# Again, based on "BFS follows the following steps:"
+# Explore and create game space tree on-demand while traversing in BFS fashion
+# Based on "BFS follows the following steps:"
 #   1. Check the starting node 
 #   2. Add its neighbours to the queue.
 #   3. Mark the starting node as explored.
@@ -189,8 +182,7 @@ def AttemptStateChange(mActualState, changeType):
 #   7. Add the neighbour nodes to the queue.
 #   8. Mark the node as explored.
 #   9. Loop through steps 4 to 8 until the queue is empty. (Note: Python won't recurse far enough)
-# Note: Removed dictGameSpaceEdges data structure as unnecessary for solving the problem
-#   because it does not appear to be an accurate adjacency representation once complete.
+#   https://pythoninwonderland.wordpress.com/2017/03/18/how-to-implement-breadth-first-search-in-python/
 def BFS_PopulateGameSpaceTreeOnDemand():
     global mStartState
 
@@ -261,12 +253,10 @@ def BFS_PopulateGameSpaceTreeOnDemand():
                         PrintState(mNextState)
                         print("--------------\n")
                         solutionFound = True
-#                        return solutionFound, iterations, gsNewNode
 
             # 8. Mark the node as explored.
             gsDequeued.explored = True
 
-    # return as yet to be decided
     return solutionFound, iterations, gsSolutionNode
 
 # 2D matrix where rows are of equal game scores and columns are increasing game scores
