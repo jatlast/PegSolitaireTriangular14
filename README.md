@@ -21,10 +21,13 @@ Assignment Homework 2: Due: 01/29/2019 5:59 PM | Began Coding: 01/25/2019 11:20 
 3) Tried to create a graph of the game state tree using a Python dictionary to represent nodes as keys and edges as lists.
 
 ## Final Solutions
-
-1) DFS - Adding a "parent" variable to the GameStateNode class allowed for recreating the moves
+```
+Note: Only BFS (working) or DFS (finds multiple solutions) can be run at a time
+use either | versionToRun = "BFS" || versionToRun = "DFS"
+```
+1) BFS - Adding a "parent" variable to the GameStateNode class allowed for recreating the moves
 from the solution state back to the start state once the solution node had been found.
-2) BFS - Implemented recursive code, however, it currently finds multiplle paths to the solution instead of a single, optimal solution.
+2) DFS - Implemented recursive code, however, it currently finds multiplle paths to the solution instead of a single, optimal solution.
 
 ## Chosen Technologies
 

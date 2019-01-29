@@ -9,7 +9,10 @@
 #                   or explain thru complexity analysis of space and
 #                   memory requirements due to depth and branching factor
 #                   why it would not work on that problem.
-
+#
+#   Note: this code is available on GitHub 
+#       https://github.com/jatlast/PegSolitaireTriangular14
+#
 # The following websites were referenced:
 #   For understanding the game itself
 #   https://en.wikipedia.org/wiki/Peg_solitaire
@@ -23,8 +26,8 @@ from random import shuffle # used to randomize the order in which moves are made
 import queue # for Breadth-First-Search (BFS)
 
 # Note: Only BFS (working) or DFS (finds multiple solutions) can be run at a time
-versionToRun = "BFS"
-#versionToRun = "DFS"
+versionToRun = "BFS"    # Prints only the solution as output
+#versionToRun = "DFS"   # Prints 2.3 Mb as output
 
 ##########################
 #### Global Variables ####
