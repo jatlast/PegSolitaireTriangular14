@@ -27,8 +27,8 @@ import queue # for Breadth-First-Search (BFS)
 
 # Note: Only BFS (working) or DFS (finds multiple solutions) can be run at a time
 #   I realize the below should be command line options, but, I'm out of time.
-#versionToRun = "BFS"    # Prints only the optimal solution as output
-versionToRun = "DFS"   # Prints 2.3 Mb and the first solution as output (search for "Solved")
+versionToRun = "BFS"    # Prints only the optimal solution as output
+#versionToRun = "DFS"   # Prints 2.3 Mb and the first solution as output (search for "Solved")
 # DFS Note: Storing all the solutions then picking the shortest would probably work,
 #   however, I am out of time on this homework assignment.
 
