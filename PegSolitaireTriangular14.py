@@ -10,8 +10,8 @@
 #                   memory requirements due to depth and branching factor
 #                   why it would not work on that problem.
 #
-#   Note: this code is available on GitHub 
-#       https://github.com/jatlast/PegSolitaireTriangular14
+# Note: this code is available on GitHub 
+#   https://github.com/jatlast/PegSolitaireTriangular14
 #
 # The following websites were referenced:
 #   For understanding the game itself
@@ -26,8 +26,11 @@ from random import shuffle # used to randomize the order in which moves are made
 import queue # for Breadth-First-Search (BFS)
 
 # Note: Only BFS (working) or DFS (finds multiple solutions) can be run at a time
-versionToRun = "BFS"    # Prints only the solution as output
-#versionToRun = "DFS"   # Prints 2.3 Mb as output
+#   I realize the below should be command line options, but, I'm out of time.
+versionToRun = "BFS"    # Prints only the optimal solution as output
+#versionToRun = "DFS"   # Prints 2.3 Mb and the first solution as output (search for "Solved")
+# DFS Note: Storing all the solutions then picking the shortest would probably work,
+#   however, I am out of time on this homework assignment.
 
 ##########################
 #### Global Variables ####
@@ -44,6 +47,7 @@ mStartState =   [
                     , [1,-1,1,-1,1,-1,1,-1,1]
                 ]
 
+# move from the perspective of the empty hole
 dictMoveTypes = {
     0 : "Diagonal_Down_Left"
     , 1 : "Diagonal_Down_Right"
@@ -277,6 +281,7 @@ def BFS_PopulateGameSpaceTreeOnDemand():
     return solutionFound, iterations, gsSolutionNode
 
 def PrintBFSolution(SolutionWasFound, gsSolutionNode):
+    print("----- Optimal BFS Solution -----")
     if SolutionWasFound:
         print("The solution from last move to first")
         iterations = 0
@@ -299,6 +304,7 @@ def PrintBFSolution(SolutionWasFound, gsSolutionNode):
 ### BFS driving code ###
 # Note: Only DFS or BFS can be run at a time
 if versionToRun == "BFS":
+    print("----- BFS Output -----")
     SolutionWasFound, NumberOfIterations, gsSolutionNode = BFS_PopulateGameSpaceTreeOnDemand()
     print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
     PrintBFSolution(SolutionWasFound, gsSolutionNode)
@@ -354,7 +360,7 @@ def DFS_PopulateGameSpaceTreeOnDemand():
         stateChanged, movedFromTo, mNextState = AttemptStateChange(gsMoveOne.state, dictMoveTypes[randomMoves[i]])
         if stateChanged:
             iterations = iterations + 1
-            print(f"1 iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
+#            print(f"1 iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
         
             score = GetScore(mNextState)
 
@@ -372,7 +378,7 @@ def DFS_PopulateGameSpaceTreeOnDemand():
                 # 6. Pop node off the stack and mark it as "processed" and add it to "processed" list
                 gsSolutionNode.processed = True
                 dfsProcessedList.append(gsSolutionNode)
-                print("1 Solved:")
+                print("Solved:")
                 PrintState(mNextState)
                 print("--------------\n")
                 return solutionFound, iterations, dfsProcessedList
@@ -385,7 +391,7 @@ def DFS_PopulateGameSpaceTreeOnDemand():
         #gsPoppedNode = dfsVisitedStack.pop()
         #dfsProcessedList.append(gsPoppedNode)
 
-    print(f"2 iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))}0 | dfsProcessedList({str(len(dfsProcessedList))})")
+    print(f"Post Recursive: iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
     return solutionFound, iterations, dfsProcessedList
 
 # Recursive helper function of DFS_PopulateGameSpaceTreeOnDemand() above
@@ -397,7 +403,7 @@ def DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessed
     gsSolutionNode = None
     gsNewNode = None
 
-    print(f"Recurse: dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
+#    print(f"Recurse: dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
 
     # always start by looking at the top of the stack
     gsStackTopNode = dfsVisitedStack.pop()
@@ -416,7 +422,7 @@ def DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessed
         stateChanged, movedFromTo, mNextState = AttemptStateChange(gsStackTopNode.state, dictMoveTypes[randomMoves[i]])
         if stateChanged:
 #            iterations = iterations + 1
-#            print(f"iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))} | dfsProcessedList({str(len(dfsProcessedList))})")
+#            print(f"iterations({iterations}) | dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
         
             score = GetScore(mNextState)
 
@@ -437,7 +443,8 @@ def DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessed
                 # 6. Pop node off the stack and mark it as "processed" and add it to "processed" list
                 gsSolutionNode.processed = True
                 dfsProcessedList.append(gsSolutionNode)
-                print("2 Solved:")
+                print(f"Recurse: dfsVisitedStack({str(len(dfsVisitedStack))}) | dfsProcessedList({str(len(dfsProcessedList))})")
+                print("Solved During Recurse:")
                 PrintState(mNextState)
                 print("--------------\n")
                 return solutionFound, dfsVisitedStack, dfsProcessedList
@@ -461,11 +468,13 @@ def DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessed
 ### DFS driving code ###
 # Note: Only DFS or BFS can be run at a time
 if versionToRun == "DFS":
+    print("----- BFS Output -----")
     dfsFirstSolutionFound = None
     dftTotalSolutionsFound = 0
     SolutionWasFound, NumberOfIterations, dfsProcessedList = DFS_PopulateGameSpaceTreeOnDemand()
-    print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
+    #print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
 
+    print("----- First BFS Solution -----")
     for i in range(0, len(dfsFirstSolutionFound)):
         PrintState(dfsFirstSolutionFound[i].state)
         print(f"{dfsFirstSolutionFound[i].move} #{i}")
