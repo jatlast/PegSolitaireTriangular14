@@ -27,8 +27,8 @@ import queue # for Breadth-First-Search (BFS)
 
 # Note: Only BFS (working) or DFS (finds multiple solutions) can be run at a time
 #   I realize the below should be command line options, but, I'm out of time.
-versionToRun = "BFS"    # Prints only the optimal solution as output
-#versionToRun = "DFS"   # Prints 2.3 Mb and the first solution as output (search for "Solved")
+#versionToRun = "BFS"    # Prints only the optimal solution as output
+versionToRun = "DFS"   # Prints 2.3 Mb and the first solution as output (search for "Solved")
 # DFS Note: Storing all the solutions then picking the shortest would probably work,
 #   however, I am out of time on this homework assignment.
 
@@ -468,13 +468,13 @@ def DFS_PopulateGameSpaceTreeOnDemand_RecurseDepth(dfsVisitedStack, dfsProcessed
 ### DFS driving code ###
 # Note: Only DFS or BFS can be run at a time
 if versionToRun == "DFS":
-    print("----- BFS Output -----")
+    print("----- DFS Output -----")
     dfsFirstSolutionFound = None
     dftTotalSolutionsFound = 0
     SolutionWasFound, NumberOfIterations, dfsProcessedList = DFS_PopulateGameSpaceTreeOnDemand()
     #print(f"The tree contains the solution? {SolutionWasFound}. It took {NumberOfIterations} iterations to discover using BFS.")
 
-    print("----- First BFS Solution -----")
+    print("----- First DFS Solution -----")
     for i in range(0, len(dfsFirstSolutionFound)):
         PrintState(dfsFirstSolutionFound[i].state)
         print(f"{dfsFirstSolutionFound[i].move} #{i}")
