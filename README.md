@@ -36,8 +36,8 @@ Motivation: Become more familiar with the following.
 
 ## The following websites were referenced
 
-* [Peg_solitaire](https://en.wikipedia.org/wiki/Peg_solitaire) - For understanding the game
-* [BFS](https://pythoninwonderland.wordpress.com/2017/03/18/how-to-implement-breadth-first-search-in-python/) - How to Implement BFS in Python
+* [Wikipedia's Peg_solitaire](https://en.wikipedia.org/wiki/Peg_solitaire) - For understanding the game
+* [How to Implement Breadth-First-Search in Python](https://pythoninwonderland.wordpress.com/2017/03/18/how-to-implement-breadth-first-search-in-python/)
 
 ### Prerequisites
 
