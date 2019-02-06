@@ -26,7 +26,7 @@ Note: Only BFS (working) or DFS (finds multiple solutions) can be run at a time
 use either: versionToRun = "BFS" || versionToRun = "DFS"
 ```
 1) BFS - Adding a "parent" variable to the GameStateNode class allowed for recreating the moves from the solution state back to the start state once the first (and optimal, as per BFS's expected functionality) solution node had been found.
-2) DFS - Implemented recursive code, however, it currently finds multiplle paths to the solution instead of a single, optimal solution. Code currently prints the first solution found.  As per the expected functionality of DFS, the algorithm does not find the optimal solution first.  
+2) DFS - Implemented recursive code, however, it currently finds multiplle paths to the solution instead of a single, optimal solution. Code currently prints the first solution found.  As per the expected functionality of BFS, the algorithm does not find the optimal solution.
 
 ## Chosen Technologies
 
